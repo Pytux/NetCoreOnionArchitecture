@@ -1,12 +1,5 @@
 using Application;
-using Application.Interfaces;
-using Domain.Entities;
-using Domain.Settings;
 using Identity;
-using Identity.Seeds;
-using Identity.Services;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using WebApi.Middlewares;
 

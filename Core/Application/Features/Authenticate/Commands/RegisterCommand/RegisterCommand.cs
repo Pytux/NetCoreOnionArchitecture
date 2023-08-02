@@ -7,11 +7,11 @@ namespace Application.Features.Authenticate.Commands.RegisterCommand;
 
 public class RegisterCommand : IRequest<Response<string>>
 {
-    public string FullName { get; set; }
-    public string Email { get; set; }
-    public string UserName { get; set; }
-    public string Password { get; set; }
-    public string Origin { get; set; }
+    public string FullName { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public string UserName { get; set; } = null!;
+    public string Password { get; set; } = null!;
+    public string Origin { get; set; } = null!;
 }
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Response<string>>

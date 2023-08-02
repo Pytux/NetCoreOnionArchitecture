@@ -4,7 +4,6 @@ using Application.Wrappers;
 using Domain.Entities;
 using Domain.Settings;
 using Identity.Contexts;
-using Identity.Helpers;
 using Identity.Seeds;
 using Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,11 +13,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using NuGet.Protocol;
 
 namespace Identity;
 
@@ -74,7 +70,7 @@ public static class ServiceExtension
                 ClockSkew = TimeSpan.Zero,
                 ValidIssuer = configuration["JWTSettings:Issuer"],
                 ValidAudience = configuration["JWTSettings:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWTSettings:Key"]))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWTSettings:Key"]!))
             };
 
             o.Events = new JwtBearerEvents()
@@ -107,13 +103,11 @@ public static class ServiceExtension
 
     public static void AddRoleScoped(this WebApplication app)
     {
-        using (var scope = app.Services.CreateScope())
-        {
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        using var scope = app.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            var task = DefaultRoles.SeedAsync(userManager, roleManager);
-            Task.WaitAll(task);
-        }
+        var task = DefaultRoles.SeedAsync(userManager, roleManager);
+        Task.WaitAll(task);
     }
 }

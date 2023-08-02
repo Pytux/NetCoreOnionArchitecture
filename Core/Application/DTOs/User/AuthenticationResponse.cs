@@ -4,11 +4,11 @@ namespace Application.DTOs.User;
 
 public class AuthenticationResponse
 {
-    public string Id { get; set; }
-    public string UserName { get; set; }
-    public string Email { get; set; }
-    public List<string> Roles { get; set; }
-    public string JWToken { get; set; }
+    public string Id { get; set; } = null!;
+    public string? UserName { get; set; } = null!;
+    public string? Email { get; set; } = null!;
+    public List<string> Roles { get; set; } = null!;
+    public string JwToken { get; set; } = null!;
 
-    [JsonIgnore] public string RefreshToken { get; set; }
+    [JsonIgnore] public string RefreshToken { get; set; } = null!;
 }

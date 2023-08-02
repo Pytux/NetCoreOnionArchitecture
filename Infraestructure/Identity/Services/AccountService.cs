@@ -9,11 +9,9 @@ using Application.Interfaces;
 using Application.Wrappers;
 using Domain.Entities;
 using Domain.Settings;
-using Identity.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using NuGet.Protocol;
 
 namespace Identity.Services;
 
@@ -46,11 +44,13 @@ public class AccountService : IAccountService
 
         var jwToken = await GenerateJwtToken(user);
 
-        var response = new AuthenticationResponse();
-        response.Id = user.Id;
-        response.JWToken = new JwtSecurityTokenHandler().WriteToken(jwToken);
-        response.Email = user.Email;
-        response.UserName = user.UserName;
+        var response = new AuthenticationResponse
+        {
+            Id = user.Id,
+            JwToken = new JwtSecurityTokenHandler().WriteToken(jwToken),
+            Email = user.Email,
+            UserName = user.UserName
+        };
 
         var rolesList = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
         response.Roles = rolesList.ToList();
@@ -91,7 +91,7 @@ public class AccountService : IAccountService
         }
     }
 
-    public async Task<JwtSecurityToken> GenerateJwtToken(User user)
+    private async Task<JwtSecurityToken> GenerateJwtToken(User user)
     {
         var userClaims = await _userManager.GetClaimsAsync(user);
         var roles = await _userManager.GetRolesAsync(user);
@@ -100,9 +100,9 @@ public class AccountService : IAccountService
 
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, user.UserName),
+            new(JwtRegisteredClaimNames.Sub, user.UserName!),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(JwtRegisteredClaimNames.Email, user.Email!),
             new("id", user.Id)
         }.Union(userClaims).Union(roleClaims);
 
@@ -120,7 +120,7 @@ public class AccountService : IAccountService
         return jwtSecurityToken;
     }
 
-    public RefreshToken GenerateRefreshToken(string ipAddress)
+    private RefreshToken GenerateRefreshToken(string ipAddress)
     {
         return new RefreshToken
         {
@@ -131,9 +131,9 @@ public class AccountService : IAccountService
         };
     }
 
-    public string RandomTokenString()
+    private string RandomTokenString()
     {
-        using var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
+        using var rngCryptoServiceProvider = RandomNumberGenerator.Create();
         var randomBytes = new byte[40];
         rngCryptoServiceProvider.GetBytes(randomBytes);
         return BitConverter.ToString(randomBytes).Replace("-", "");

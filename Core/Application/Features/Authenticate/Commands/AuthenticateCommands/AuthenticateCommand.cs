@@ -7,9 +7,9 @@ namespace Application.Features.Authenticate.Commands.AuthenticateCommands;
 
 public class AuthenticateCommand : IRequest<Response<AuthenticationResponse>>
 {
-    public string Email { get; set; }
-    public string Password { get; set; }
-    public string IpAddress { get; set; }
+    public string Email { get; set; } = null!;
+    public string Password { get; set; } = null!;
+    public string IpAddress { get; set; } = null!;
 }
 
 public class AuthenticateCommandHandler : IRequestHandler<AuthenticateCommand, Response<AuthenticationResponse>>

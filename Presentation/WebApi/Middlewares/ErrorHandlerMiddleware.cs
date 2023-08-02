@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text.Json;
 using Application.Wrappers;
-using NuGet.Protocol;
 
 namespace WebApi.Middlewares;
 
@@ -24,11 +23,11 @@ public class ErrorHandlerMiddleware
         {
             var response = context.Response;
             response.ContentType = "application/json";
-            var responseModel = new Response<string>() { Succeeded = false, Message = error?.Message };
+            var responseModel = new Response<string>() { Succeeded = false, Message = error.Message };
 
             switch (error)
             {
-                case Application.Exceptions.ApiException e:
+                case Application.Exceptions.ApiException:
                     //custom application error
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
@@ -37,7 +36,7 @@ public class ErrorHandlerMiddleware
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
                     responseModel.Errors = e.Errors;
                     break;
-                case KeyNotFoundException e:
+                case KeyNotFoundException:
                     //not found error
                     response.StatusCode = (int)HttpStatusCode.NotFound;
                     break;

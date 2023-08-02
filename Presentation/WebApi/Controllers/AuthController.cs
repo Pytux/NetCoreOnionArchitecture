@@ -25,7 +25,7 @@ public class AuthController : ControllerBase
         {
             Email = request.Email,
             Password = request.Password,
-            IpAddress = GenerateIPAddress()
+            IpAddress = GenerateIpAddress()
         }));
     }
 
@@ -38,11 +38,11 @@ public class AuthController : ControllerBase
             Password = request.Password,
             FullName = request.FullName,
             UserName = request.Username,
-            Origin = Request.Headers["origin"]
+            Origin = Request.Headers["origin"]!
         }));
     }
 
-    private string GenerateIPAddress()
+    private string GenerateIpAddress()
     {
         if (Request.Headers.ContainsKey("X-Forwarded-For"))
             return Request.Headers["X-Forwarded-For"];
