@@ -33,13 +33,13 @@ public static class ServiceExtension
         services.AddScoped<IAccountService, AccountService>();
 
         #endregion
-        
+
 
         services.AddDbContext<IdentityContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("IdentityConnection"),
                 b => b.MigrationsAssembly(typeof(IdentityContext).Assembly.FullName)));
-        
+
         services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<IdentityContext>()
             .AddDefaultTokenProviders();
 
@@ -107,7 +107,7 @@ public static class ServiceExtension
 
     public static void AddRoleScoped(this WebApplication app)
     {
-        using(var scope = app.Services.CreateScope())
+        using (var scope = app.Services.CreateScope())
         {
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();

@@ -20,7 +20,7 @@ public class AccountController : ControllerBase
     {
         return Ok("You are authorized");
     }
-    
+
     [HttpGet("imAdmin")]
     [Authorize(Roles = "Admin")]
     public IActionResult GetAdmin()

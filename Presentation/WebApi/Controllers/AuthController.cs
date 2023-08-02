@@ -41,7 +41,7 @@ public class AuthController : ControllerBase
             Origin = Request.Headers["origin"]
         }));
     }
-    
+
     private string GenerateIPAddress()
     {
         if (Request.Headers.ContainsKey("X-Forwarded-For"))
