@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Application.Features.Authenticate.Commands.RegisterCommand;
 
-public class RegisterCommand : IRequest<Response<string>>
+public class RegisterCommand : IRequest<Response<AuthenticationResponse>>
 {
     public string FullName { get; set; } = null!;
     public string Email { get; set; } = null!;
@@ -14,7 +14,7 @@ public class RegisterCommand : IRequest<Response<string>>
     public string Origin { get; set; } = null!;
 }
 
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Response<string>>
+public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Response<AuthenticationResponse>>
 {
     private readonly IAccountService _accountService;
 
@@ -23,7 +23,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Response<
         _accountService = accountService;
     }
 
-    public async Task<Response<string>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<Response<AuthenticationResponse>> Handle(RegisterCommand request,
+        CancellationToken cancellationToken)
     {
         return await _accountService.RegisterAsync(new RegisterRequest
         {

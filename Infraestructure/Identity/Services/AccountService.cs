@@ -1,6 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using Application.DTOs.User;
 using Application.Enums;
@@ -17,18 +16,20 @@ namespace Identity.Services;
 
 public class AccountService : IAccountService
 {
-    private readonly UserManager<User> _userManager;
+    private readonly JwtSettings _jwtSettings;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly SignInManager<User> _signInManager;
-    private readonly JwtSettings _jwtSettings;
+    private readonly ITokenService _tokenService;
+    private readonly UserManager<User> _userManager;
 
     public AccountService(UserManager<User> userManager, RoleManager<IdentityRole> roleManager,
-        SignInManager<User> signInManager, IOptions<JwtSettings> jwtSettings)
+        SignInManager<User> signInManager, IOptions<JwtSettings> jwtSettings, ITokenService tokenService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _signInManager = signInManager;
         _jwtSettings = jwtSettings.Value;
+        _tokenService = tokenService;
     }
 
     public async Task<Response<AuthenticationResponse>> AuthenticateAsync(AuthenticationRequest request,
@@ -47,21 +48,18 @@ public class AccountService : IAccountService
         var response = new AuthenticationResponse
         {
             Id = user.Id,
-            JwToken = new JwtSecurityTokenHandler().WriteToken(jwToken),
+            JwToken = jwToken,
             Email = user.Email,
             UserName = user.UserName
         };
 
         var rolesList = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
         response.Roles = rolesList.ToList();
-
-        var refreshToken = GenerateRefreshToken(ipAddress);
-        response.RefreshToken = refreshToken.Token;
-
+        
         return new Response<AuthenticationResponse>(response, $"Successfully logged in {user.UserName}");
     }
 
-    public async Task<Response<string>> RegisterAsync(RegisterRequest request, string origin)
+    public async Task<Response<AuthenticationResponse>> RegisterAsync(RegisterRequest request, string origin)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user != null) throw new ApiException("Email is already taken");
@@ -80,18 +78,25 @@ public class AccountService : IAccountService
         var result = await _userManager.CreateAsync(user, request.Password);
         if (result.Succeeded)
         {
+            var jwToken = await GenerateJwtToken(user);
             await _userManager.AddToRoleAsync(user, Roles.User.ToString());
-            return new Response<string>(user.Id, "User registered successfully");
+            var response = new AuthenticationResponse
+            {
+                Id = user.Id,
+                JwToken = jwToken,
+                Email = user.Email,
+                UserName = user.UserName
+            };
+
+            return new Response<AuthenticationResponse>(response, "User registered successfully");
         }
-        else
-        {
-            var errorString = "";
-            foreach (var error in result.Errors) errorString += error.Description + " +";
-            throw new ApiException($"{errorString}");
-        }
+
+        var errorString = "";
+        foreach (var error in result.Errors) errorString += error.Description + " +";
+        throw new ApiException($"{errorString}");
     }
 
-    private async Task<JwtSecurityToken> GenerateJwtToken(User user)
+    private async Task<string> GenerateJwtToken(User user)
     {
         var userClaims = await _userManager.GetClaimsAsync(user);
         var roles = await _userManager.GetRolesAsync(user);
@@ -113,29 +118,12 @@ public class AccountService : IAccountService
             _jwtSettings.Issuer,
             _jwtSettings.Audience,
             claims,
-            expires: DateTime.Now.AddMinutes(_jwtSettings.DurationInMinutes),
+            expires: DateTime.Now.AddMinutes(_jwtSettings.DurationInDays),
             signingCredentials: signingCredentials
         );
 
-        return jwtSecurityToken;
-    }
-
-    private RefreshToken GenerateRefreshToken(string ipAddress)
-    {
-        return new RefreshToken
-        {
-            Token = RandomTokenString(),
-            Expires = DateTime.Now.AddDays(7),
-            Created = DateTime.Now,
-            CreatedByIp = ipAddress
-        };
-    }
-
-    private string RandomTokenString()
-    {
-        using var rngCryptoServiceProvider = RandomNumberGenerator.Create();
-        var randomBytes = new byte[40];
-        rngCryptoServiceProvider.GetBytes(randomBytes);
-        return BitConverter.ToString(randomBytes).Replace("-", "");
+        var token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+        await _tokenService.SaveTokenAsync(token, user);
+        return token;
     }
 }

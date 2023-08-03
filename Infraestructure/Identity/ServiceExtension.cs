@@ -4,6 +4,7 @@ using Application.Wrappers;
 using Domain.Entities;
 using Domain.Settings;
 using Identity.Contexts;
+using Identity.Middleware;
 using Identity.Seeds;
 using Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,13 +25,6 @@ public static class ServiceExtension
     {
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
 
-        #region Services
-
-        services.AddScoped<IAccountService, AccountService>();
-
-        #endregion
-
-
         services.AddDbContext<IdentityContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("IdentityConnection"),
@@ -50,7 +44,7 @@ public static class ServiceExtension
             options.Password.RequireLowercase = true;
             options.Password.RequireUppercase = true;
             options.Password.RequiredUniqueChars = 1;
-            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequireNonAlphanumeric = false;
         });
 
         services.AddAuthentication(options =>
@@ -73,7 +67,7 @@ public static class ServiceExtension
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWTSettings:Key"]!))
             };
 
-            o.Events = new JwtBearerEvents()
+            o.Events = new JwtBearerEvents
             {
                 OnAuthenticationFailed = c =>
                 {
@@ -99,6 +93,14 @@ public static class ServiceExtension
                 }
             };
         });
+
+        #region Services
+
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IAccountService, AccountService>();
+
+        #endregion
     }
 
     public static void AddRoleScoped(this WebApplication app)
@@ -109,5 +111,10 @@ public static class ServiceExtension
 
         var task = DefaultRoles.SeedAsync(userManager, roleManager);
         Task.WaitAll(task);
+    }
+
+    public static void AddTokenMiddleware(this WebApplication app)
+    {
+        app.UseMiddleware<TokenMiddleware>();
     }
 }

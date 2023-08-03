@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
 
-[Route("api/[controller]")]
+[Route("v1/[controller]")]
 [ApiController]
 [Authorize]
 public class AccountController : ControllerBase

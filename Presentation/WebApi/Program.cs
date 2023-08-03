@@ -44,8 +44,6 @@ builder.Services.AddIdentityInfraestructure(builder.Configuration);
 
 var app = builder.Build();
 
-app.AddRoleScoped();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -60,6 +58,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.AddRoleScoped();
+app.AddTokenMiddleware();
 
+app.MapControllers();
 app.Run();
